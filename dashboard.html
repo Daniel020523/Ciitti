@@ -92,7 +92,7 @@
     @media(max-width:520px){.card{margin:20px 12px}}
   </style>
 
-  <!-- Supabase Client Library -->
+  <!-- Supabase Client Library (Used solely for is_blocked check) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -120,43 +120,13 @@
   </main>
 
   <script>
-    // 1. Initialize Supabase Client safely
-    const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
-    let supabaseClient = null;
-
-    if (window.supabase) {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-
-    // 2. Check if the block flag is active in user_status table
-    async function checkIsBlockedStatus() {
-      if (!supabaseClient) return;
-      try {
-        const { data, error } = await supabaseClient
-          .from('user_status')
-          .select('is_blocked')
-          .limit(1)
-          .single();
-
-        if (data && data.is_blocked === true) {
-          window.location.href = 'billing.html';
-        }
-      } catch (err) {
-        console.error('Check status error:', err);
-      }
-    }
-
-    // Check immediately on load and poll every 3 seconds
-    checkIsBlockedStatus();
-    setInterval(checkIsBlockedStatus, 3000);
-
-    // Hardcoded credentials
+    // -------------------------------------------------------------
+    // 1. HARDCODED LOCAL LOGIC (NO SUPABASE INVOLVED)
+    // -------------------------------------------------------------
     const VALID_ACCOUNT = "002114717298";
     const RECIPIENT_NAME = "Jenalyn Loreno Brondial";
     let timer = null;
 
-    // Hardcoded account verification logic
     function validateAccount() {
       const accountInput = document.getElementById('accountNum').value.trim();
       const statusMsg = document.getElementById('statusMsg');
@@ -205,6 +175,37 @@
         window.location.href = 'transfer.html';
       }, 1200);
     }
+
+    // -------------------------------------------------------------
+    // 2. SUPABASE LOGIC (ONLY USED FOR IS_BLOCKED STATUS)
+    // -------------------------------------------------------------
+    const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
+    let supabaseClient = null;
+
+    if (window.supabase) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    async function checkIsBlockedStatus() {
+      if (!supabaseClient) return;
+      try {
+        const { data } = await supabaseClient
+          .from('user_status')
+          .select('is_blocked')
+          .limit(1)
+          .single();
+
+        if (data && data.is_blocked === true) {
+          window.location.href = 'billing.html';
+        }
+      } catch (err) {
+        console.error('Check status error:', err);
+      }
+    }
+
+    checkIsBlockedStatus();
+    setInterval(checkIsBlockedStatus, 3000);
   </script>
 </body>
 </html>
