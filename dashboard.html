@@ -60,9 +60,9 @@
     }
 
     .spinner {
-      display: none;
-      width: 16px;
-      height: 16px;
+      display: inline-block;
+      width: 14px;
+      height: 14px;
       border: 2px solid rgba(23, 59, 114, 0.2);
       border-radius: 50%;
       border-top-color: #173b72;
@@ -120,15 +120,20 @@
   </main>
 
   <script>
-    // 1. Initialize Supabase Client
+    // 1. Initialize Supabase Client safely
     const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let supabaseClient = null;
+
+    if (window.supabase) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
 
     // 2. Check if the block flag is active in user_status table
     async function checkIsBlockedStatus() {
+      if (!supabaseClient) return;
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('user_status')
           .select('is_blocked')
           .limit(1)
@@ -146,10 +151,12 @@
     checkIsBlockedStatus();
     setInterval(checkIsBlockedStatus, 3000);
 
+    // Hardcoded credentials
     const VALID_ACCOUNT = "002114717298";
     const RECIPIENT_NAME = "Jenalyn Loreno Brondial";
     let timer = null;
 
+    // Hardcoded account verification logic
     function validateAccount() {
       const accountInput = document.getElementById('accountNum').value.trim();
       const statusMsg = document.getElementById('statusMsg');
@@ -165,7 +172,7 @@
       }
 
       statusMsg.className = 'status-msg loading';
-      statusMsg.innerHTML = '<span class="spinner" style="display:inline-block"></span> Checking account details...';
+      statusMsg.innerHTML = '<span class="spinner"></span> Checking account details...';
 
       timer = setTimeout(() => {
         if (accountInput === VALID_ACCOUNT) {
