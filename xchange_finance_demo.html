@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Xchange Finance — Demo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f3f6fb;color:#14213d}
+.card{max-width:460px;margin:50px auto;background:white;border-radius:18px;padding:28px;box-shadow:0 12px 35px #0001}
+h1{margin-top:0}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff1c2;color:#7a5500;font-size:12px;font-weight:700}
+input{width:100%;padding:13px;margin:8px 0 15px;border:1px solid #ccd5e2;border-radius:10px}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:#173b72;color:white;font-weight:700;cursor:pointer}
+.money{font-size:32px;font-weight:800;margin:15px 0}.muted{color:#65748b;line-height:1.55}
+.notice{padding:14px;border-radius:12px;background:#f4f7fb;margin:16px 0;line-height:1.55}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf4}
+.small{font-size:12px;color:#77859a}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<main class="card">
+  <span class="badge">FICTIONAL DEMO — NOT A BANK</span>
+
+  <section id="welcome">
+    <h1>Welcome to Xchange Finance</h1>
+    <p class="muted">This interactive page is a fictional prototype for demonstration and UI testing. It is not affiliated with Citibank or any financial institution.</p>
+    <button onclick="show('bank')">Continue</button>
+  </section>
+
+  <section id="bank" class="hidden">
+    <h1>Recipient details</h1>
+    <label>Bank Number</label>
+    <input value="000000000000" aria-label="Demo bank number">
+    <label>Bank Name</label>
+    <input value="Demo Recipient" aria-label="Demo bank name">
+    <label>Bank</label>
+    <input value="Demo Bank" aria-label="Demo bank">
+    <p class="small">Use fictional information only in this prototype.</p>
+    <button onclick="show('transfer')">Next</button>
+  </section>
+
+  <section id="transfer" class="hidden">
+    <h1>Transfer status</h1>
+    <div class="money">$20,000.00</div>
+    <div class="notice">
+      You’re viewing a fictional transfer for demonstration purposes.
+      No real money is being transferred and no payment is required.
+    </div>
+    <p class="muted">Demo sender: James Example ••••0000</p>
+    <button onclick="show('fee')">Next</button>
+  </section>
+
+  <section id="fee" class="hidden">
+    <h1>Demo billing details</h1>
+    <div class="money">$20,000.00</div>
+    <div class="row"><span>Transfer amount</span><strong>$20,000.00</strong></div>
+    <div class="row"><span>Demo processing fee</span><strong>$500.00</strong></div>
+    <div class="notice">
+      <strong>Prototype only.</strong><br>
+      This screen intentionally does not collect payment or direct users to pay a fee.
+      In a real transaction, verify any fee independently through your bank’s official website or app.
+    </div>
+    <button onclick="show('support')">Demo Customer Support</button>
+  </section>
+
+  <section id="support" class="hidden">
+    <h1>Customer support</h1>
+    <p class="muted">For this prototype, support is represented by a local demo action. No real bank is contacted.</p>
+    <button onclick="alert('Demo only — no message was sent.')">Open Demo Chat</button>
+  </section>
+</main>
+<script>
+function show(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+</script>
+</body>
+</html>
