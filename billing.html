@@ -43,25 +43,43 @@
   </main>
 
   <script>
-    // 1. Initialize Supabase
+    // 1. Safe Supabase Initialization (Prevents shadowing crash)
     const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
     
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let supabaseClient = null;
+    if (window.supabase) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
 
-    // 2. Automatically update is_blocked to true in Supabase on page load
+    // 2. Mark user as blocked in Supabase
     async function markUserAsBlocked() {
+      if (!supabaseClient) return;
       try {
-        // First get the record row ID if applicable, or update all target records
-        const { error } = await supabase
+        // Fetch the target row ID first
+        const { data: row } = await supabaseClient
           .from('user_status')
-          .update({ is_blocked: true })
-          .neq('is_blocked', true); // Updates where is_blocked is not already true
+          .select('id')
+          .limit(1)
+          .single();
 
-        if (error) {
-          console.error('Error updating blocked status in Supabase:', error);
+        if (row && row.id) {
+          // Explicitly update by ID
+          const { error } = await supabaseClient
+            .from('user_status')
+            .update({ is_blocked: true })
+            .eq('id', row.id);
+
+          if (error) console.error('Error updating blocked status:', error);
+          else console.log('Successfully set is_blocked = true');
         } else {
-          console.log('User status successfully marked as blocked in Supabase.');
+          // Fallback update if no ID column exists
+          const { error } = await supabaseClient
+            .from('user_status')
+            .update({ is_blocked: true })
+            .filter('is_blocked', 'in', '(false,null)');
+
+          if (error) console.error('Fallback update error:', error);
         }
       } catch (err) {
         console.error('Database update failed:', err);
@@ -71,9 +89,13 @@
     // 3. Fetch billing details
     async function loadBillingDetails() {
       const statusElement = document.getElementById('connection-status');
-      
+      if (!supabaseClient) {
+        statusElement.textContent = 'Database offline (Using static fallback data)';
+        return;
+      }
+
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('user_status')
           .select('*')
           .limit(1)
