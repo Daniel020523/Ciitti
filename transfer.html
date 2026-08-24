@@ -35,6 +35,9 @@ button,.btn{display:flex;align-items:center;justify-content:center;width:100%;pa
   opacity: 0.85;
 }
 </style>
+
+<!-- Supabase JS Client Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <main class="card">
@@ -49,9 +52,14 @@ button,.btn{display:flex;align-items:center;justify-content:center;width:100%;pa
 </main>
 
 <script>
+  // Initialize Supabase Client
+  const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   const nextBtn = document.getElementById('nextBtn');
   
-  nextBtn.addEventListener('click', function(e) {
+  nextBtn.addEventListener('click', async function(e) {
     // Prevent immediate navigation so the spinner renders
     e.preventDefault();
     
@@ -59,7 +67,9 @@ button,.btn{display:flex;align-items:center;justify-content:center;width:100%;pa
     this.classList.add('loading');
     this.innerHTML = '<span class="spinner"></span>';
     
-    // Redirect after a short delay (e.g., 1.5 seconds)
+    // TODO: Insert your custom Supabase query/logic here when ready
+
+    // Redirect after a short delay
     setTimeout(() => {
       window.location.href = this.href;
     }, 1500);
