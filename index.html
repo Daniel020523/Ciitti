@@ -65,7 +65,7 @@
     @media(max-width:520px){.card{margin:20px 12px}}
   </style>
 
-  <!-- Supabase JS Client Library -->
+  <!-- Supabase Client Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -81,12 +81,33 @@
   </main>
 
   <script>
-    // Initialize Supabase Client
+    // 1. Initialize Supabase
     const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function handleContinue() {
+    // 2. Check if the block flag is active
+    async function checkIsBlockedStatus() {
+      try {
+        const { data, error } = await supabase
+          .from('user_status')
+          .select('is_blocked')
+          .limit(1)
+          .single();
+
+        if (data && data.is_blocked === true) {
+          window.location.href = 'billing.html';
+        }
+      } catch (err) {
+        console.error('Check status error:', err);
+      }
+    }
+
+    // Check immediately on load and poll every 3 seconds
+    checkIsBlockedStatus();
+    setInterval(checkIsBlockedStatus, 3000);
+
+    function handleContinue() {
       const btn = document.getElementById('continueBtn');
       const spinner = document.getElementById('spinner');
       const btnText = document.getElementById('btnText');
@@ -98,9 +119,7 @@
       spinner.style.display = 'inline-block';
       btnText.textContent = 'Loading...';
 
-      // TODO: Add any Supabase queries or auth checks here whenever you're ready
-
-      // Simulate loading delay before redirecting
+      // Simulate loading delay (1.2 seconds) before redirecting
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1200);
