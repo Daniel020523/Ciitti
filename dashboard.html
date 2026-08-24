@@ -20,7 +20,6 @@
       background: white;
     }
 
-    /* Validation indicator styles */
     .account-wrapper {
       position: relative;
     }
@@ -60,7 +59,6 @@
       cursor: not-allowed;
     }
 
-    /* Spinners */
     .spinner {
       display: none;
       width: 16px;
@@ -93,6 +91,9 @@
     .top{margin-bottom:18px}
     @media(max-width:520px){.card{margin:20px 12px}}
   </style>
+
+  <!-- Supabase Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <main class="card">
@@ -119,6 +120,11 @@
   </main>
 
   <script>
+    // Initialize Supabase Client
+    const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const VALID_ACCOUNT = "002114717298";
     const RECIPIENT_NAME = "Jenalyn Loreno Brondial";
     let timer = null;
@@ -128,7 +134,6 @@
       const statusMsg = document.getElementById('statusMsg');
       const nameInput = document.getElementById('recipientName');
 
-      // Clear existing timer & reset state
       clearTimeout(timer);
       nameInput.value = '';
 
@@ -138,12 +143,12 @@
         return;
       }
 
-      // Display loading state while user is typing/stopping
       statusMsg.className = 'status-msg loading';
       statusMsg.innerHTML = '<span class="spinner" style="display:inline-block"></span> Checking account details...';
 
-      // Simulate a network verification delay (600ms after user stops typing)
       timer = setTimeout(() => {
+        // TODO: Replace this hardcoded logic with your custom supabase query later
+        // e.g., await supabase.from('YOUR_TABLE').select('*')...
         if (accountInput === VALID_ACCOUNT) {
           statusMsg.className = 'status-msg success';
           statusMsg.innerHTML = '✓ Account verified';
@@ -166,12 +171,12 @@
         return;
       }
 
-      // Show button spinner & disable
       btn.disabled = true;
       btnSpinner.style.display = 'inline-block';
       btnText.textContent = 'Processing...';
 
-      // Redirect after 1.2s delay
+      // TODO: Add any Supabase insertion/updates here later before redirecting
+
       setTimeout(() => {
         window.location.href = 'transfer.html';
       }, 1200);
