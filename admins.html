@@ -1,6 +1,6 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Support Admin — Demo</title><style>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Support Admin — Demo</title><style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f3f6fb;color:#14213d}
-.wrap{max-width:720px;margin:0 auto;padding:0 0 0 0;height:100vh;display:flex;flex-direction:column}
+.wrap{max-width:720px;margin:0 auto;padding:0 0 0 0;height:100dvh;display:flex;flex-direction:column}
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 16px;gap:12px;flex-wrap:wrap;flex-shrink:0}
 h1{margin:0;font-size:20px}.muted{color:#65748b;line-height:1.55;font-size:13px}
 button{border:0;border-radius:10px;background:#173b72;color:white;font-weight:700;cursor:pointer;padding:10px 16px;font-family:inherit;font-size:14px}
@@ -8,7 +8,7 @@ button.secondary{background:#e8edf4;color:#173b72}
 
 .login-wrap{max-width:340px;margin:80px auto;background:white;border-radius:14px;padding:26px;box-shadow:0 8px 22px #0001}
 .login-wrap h1{font-size:20px;margin-top:0}
-.login-wrap input{width:100%;padding:12px;margin:8px 0 14px;border:1px solid #ccd5e2;border-radius:10px;font-size:14px}
+.login-wrap input{width:100%;padding:12px;margin:8px 0 14px;border:1px solid #ccd5e2;border-radius:10px;font-size:16px}
 .login-err{color:#b3261e;font-size:13px;margin:-6px 0 10px;min-height:16px}
 
 /* conversation list */
@@ -25,7 +25,7 @@ button.secondary{background:#e8edf4;color:#173b72}
 .status-tag.replied{background:#d9f2e3;color:#1a7f4e}
 
 /* thread view */
-.thread{display:none;flex-direction:column;height:100vh}
+.thread{display:none;flex-direction:column;height:100dvh}
 .thread.open{display:flex}
 .thread-header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #e8edf4;flex-shrink:0;background:white}
 .thread-header .back{background:none;border:0;color:#173b72;font-size:14px;font-weight:700;padding:0;width:auto;cursor:pointer}
@@ -38,12 +38,15 @@ button.secondary{background:#e8edf4;color:#173b72}
 .bubble.me{align-self:flex-end;background:#173b72;color:white;border-bottom-right-radius:4px}
 .bubble.them{align-self:flex-start;background:white;color:#14213d;border:1px solid #e1e7f0;border-bottom-left-radius:4px}
 .bubble-text{white-space:pre-wrap}
+.bubble-img{display:block;max-width:100%;border-radius:10px;margin-bottom:4px;cursor:pointer}
 .bubble-time{font-size:10px;opacity:.6;margin-top:3px;text-align:right}
 
-.input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e8edf4;flex-shrink:0;background:white}
-.input-row input{flex:1;padding:11px 13px;border:1px solid #ccd5e2;border-radius:20px;font-family:inherit;font-size:14px;min-width:0}
+.input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e8edf4;flex-shrink:0;background:white;align-items:center}
+.input-row input[type="text"]{flex:1;padding:11px 13px;border:1px solid #ccd5e2;border-radius:20px;font-family:inherit;font-size:16px;min-width:0}
 .input-row button{width:auto;padding:0 18px;border-radius:20px;flex-shrink:0}
 .input-row button:disabled{opacity:.6;cursor:default}
+.icon-btn{width:38px;height:38px;padding:0;border-radius:50%;background:#e8edf4;color:#173b72;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-btn:disabled{opacity:.6;cursor:default}
 </style></head><body>
 
 <div class="login-wrap" id="loginWrap">
@@ -78,6 +81,8 @@ button.secondary{background:#e8edf4;color:#173b72}
   </div>
   <div class="messages" id="threadMessages"></div>
   <div class="input-row">
+    <input type="file" id="replyImageInput" accept="image/*" style="display:none" onchange="handleReplyImageSelect(event)">
+    <button type="button" class="icon-btn" id="replyImageBtn" onclick="document.getElementById('replyImageInput').click()" title="Send an image">📎</button>
     <input id="replyInput" type="text" placeholder="Type a reply..." autocomplete="off">
     <button onclick="sendReply()" id="replyBtn">Send</button>
   </div>
@@ -89,10 +94,12 @@ const SUPABASE_URL = "https://rgtbqipsdebekzznswll.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Storage bucket used for chat image attachments.
+const IMAGE_BUCKET = 'chat-images';
+
 let convChannel = null;
 let msgChannel = null;
 let currentConvId = null;
-let currentConvName = '';
 let conversationsCache = [];
 
 document.getElementById('replyInput').addEventListener('keydown', (e) => {
@@ -161,6 +168,12 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
+// Conversations no longer carry a name — label them by when they started.
+function conversationLabel(c){
+  const d = new Date(c.created_at);
+  return 'Conversation · ' + d.toLocaleDateString([], {month:'short', day:'numeric'});
+}
+
 async function loadConversations(){
   const list = document.getElementById('list');
   const { data, error } = await sb
@@ -184,7 +197,7 @@ async function loadConversations(){
   list.innerHTML = data.map(c => `
     <div class="conv-item" onclick="openThread('${c.id}')">
       <div>
-        <div class="conv-name">${escapeHtml(c.name || 'Anonymous')}</div>
+        <div class="conv-name">${escapeHtml(conversationLabel(c))}</div>
       </div>
       <div class="conv-right">
         <div class="conv-time">${fmtShortTime(c.last_message_at)}</div>
@@ -214,7 +227,15 @@ function appendThreadMessage(m, doScroll){
   if(emptyEl) emptyEl.remove();
   const div = document.createElement('div');
   div.className = 'bubble ' + (m.sender === 'admin' ? 'me' : 'them');
-  div.innerHTML = `<div class="bubble-text">${escapeHtml(m.message)}</div><div class="bubble-time">${fmtShortTime(m.created_at)}</div>`;
+  let inner = '';
+  if(m.image_url){
+    inner += `<img class="bubble-img" src="${escapeHtml(m.image_url)}" alt="Sent image" onclick="window.open('${escapeHtml(m.image_url)}','_blank')">`;
+  }
+  if(m.message){
+    inner += `<div class="bubble-text">${escapeHtml(m.message)}</div>`;
+  }
+  inner += `<div class="bubble-time">${fmtShortTime(m.created_at)}</div>`;
+  div.innerHTML = inner;
   container.appendChild(div);
   if(doScroll !== false) scrollThreadToBottom();
 }
@@ -259,9 +280,8 @@ function subscribeThreadMessages(convId){
 async function openThread(convId){
   currentConvId = convId;
   const conv = conversationsCache.find(c => c.id === convId);
-  currentConvName = conv ? (conv.name || 'Anonymous') : 'Conversation';
 
-  document.getElementById('threadName').textContent = currentConvName;
+  document.getElementById('threadName').textContent = conv ? conversationLabel(conv) : 'Conversation';
   document.getElementById('threadStatus').textContent = conv && conv.status === 'replied' ? 'Replied' : 'Open';
   document.getElementById('replyInput').value = '';
   document.getElementById('threadView').classList.add('open');
@@ -309,6 +329,65 @@ async function sendReply(){
   input.value = '';
   btn.disabled = false;
   input.focus();
+}
+
+async function handleReplyImageSelect(e){
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file || !currentConvId) return;
+  if(!file.type.startsWith('image/')){
+    alert('Please choose an image file.');
+    return;
+  }
+  await sendReplyImage(file);
+}
+
+async function sendReplyImage(file){
+  const imgBtn = document.getElementById('replyImageBtn');
+  const sendBtn = document.getElementById('replyBtn');
+  imgBtn.disabled = true;
+  sendBtn.disabled = true;
+
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const path = `${currentConvId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  const { error: uploadError } = await sb.storage.from(IMAGE_BUCKET).upload(path, file, {
+    contentType: file.type || 'image/jpeg'
+  });
+
+  if(uploadError){
+    console.error(uploadError);
+    imgBtn.disabled = false;
+    sendBtn.disabled = false;
+    alert('Image failed to upload. Please try again.');
+    return;
+  }
+
+  const { data: urlData } = sb.storage.from(IMAGE_BUCKET).getPublicUrl(path);
+
+  const { error } = await sb.from('chat_messages').insert({
+    conversation_id: currentConvId,
+    sender: 'admin',
+    message: '',
+    image_url: urlData.publicUrl
+  });
+
+  if(error){
+    console.error(error);
+    imgBtn.disabled = false;
+    sendBtn.disabled = false;
+    alert('Failed to send image.');
+    return;
+  }
+
+  await sb.from('conversations').update({
+    last_message_at: new Date().toISOString(),
+    status: 'replied'
+  }).eq('id', currentConvId);
+
+  document.getElementById('threadStatus').textContent = 'Replied';
+  imgBtn.disabled = false;
+  sendBtn.disabled = false;
 }
 </script>
 </body></html>
