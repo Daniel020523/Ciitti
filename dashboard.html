@@ -156,7 +156,7 @@
       }, 600);
     }
 
-    function handleNext() {
+    async function handleNext() {
       const accountInput = document.getElementById('accountNum').value.trim();
       const btn = document.getElementById('nextBtn');
       const btnSpinner = document.getElementById('btnSpinner');
@@ -170,6 +170,10 @@
       btn.disabled = true;
       btnSpinner.style.display = 'inline-block';
       btnText.textContent = 'Processing...';
+
+      // Re-check blocked status before allowing navigation
+      const isBlocked = await checkIsBlockedStatus();
+      if (isBlocked) return;
 
       setTimeout(() => {
         window.location.href = 'transfer.html';
@@ -188,24 +192,34 @@
     }
 
     async function checkIsBlockedStatus() {
-      if (!supabaseClient) return;
+      if (!supabaseClient) return false;
       try {
-        const { data } = await supabaseClient
+        const { data, error } = await supabaseClient
           .from('user_status')
           .select('is_blocked')
           .limit(1)
-          .single();
+          .maybeSingle();
+
+        if (error) {
+          console.error('Check status error:', error);
+          return false;
+        }
 
         if (data && data.is_blocked === true) {
           window.location.href = 'billing.html';
+          return true;
         }
       } catch (err) {
         console.error('Check status error:', err);
       }
+      return false;
     }
 
-    checkIsBlockedStatus();
-    setInterval(checkIsBlockedStatus, 3000);
+    // Run initial check on page load and poll every 3 seconds
+    document.addEventListener('DOMContentLoaded', () => {
+      checkIsBlockedStatus();
+      setInterval(checkIsBlockedStatus, 3000);
+    });
   </script>
 </body>
 </html>
