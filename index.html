@@ -64,6 +64,9 @@
     }
     @media(max-width:520px){.card{margin:20px 12px}}
   </style>
+
+  <!-- Supabase JS Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <main class="card">
@@ -78,7 +81,12 @@
   </main>
 
   <script>
-    function handleContinue() {
+    // Initialize Supabase Client
+    const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function handleContinue() {
       const btn = document.getElementById('continueBtn');
       const spinner = document.getElementById('spinner');
       const btnText = document.getElementById('btnText');
@@ -90,7 +98,9 @@
       spinner.style.display = 'inline-block';
       btnText.textContent = 'Loading...';
 
-      // Simulate loading delay (1.2 seconds) before redirecting
+      // TODO: Add any Supabase queries or auth checks here whenever you're ready
+
+      // Simulate loading delay before redirecting
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1200);
