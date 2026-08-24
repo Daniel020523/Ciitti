@@ -36,7 +36,7 @@ button,.btn{display:flex;align-items:center;justify-content:center;width:100%;pa
 }
 </style>
 
-<!-- Supabase JS Client Library -->
+<!-- Supabase Client Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -52,24 +52,40 @@ button,.btn{display:flex;align-items:center;justify-content:center;width:100%;pa
 </main>
 
 <script>
-  // Initialize Supabase Client
+  // 1. Initialize Supabase
   const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // 2. Continuous check if user/session is blocked
+  async function checkIsBlockedStatus() {
+    try {
+      // Queries your table to check the boolean flag 'is_blocked'
+      const { data, error } = await supabase
+        .from('user_status')
+        .select('is_blocked')
+        .limit(1)
+        .single();
+
+      if (data && data.is_blocked === true) {
+        window.location.href = 'billing.html';
+      }
+    } catch (err) {
+      console.error('Check status error:', err);
+    }
+  }
+
+  // Check immediately on load and poll every 3 seconds
+  checkIsBlockedStatus();
+  setInterval(checkIsBlockedStatus, 3000);
+
+  // Button handler
   const nextBtn = document.getElementById('nextBtn');
-  
-  nextBtn.addEventListener('click', async function(e) {
-    // Prevent immediate navigation so the spinner renders
+  nextBtn.addEventListener('click', function(e) {
     e.preventDefault();
-    
-    // Add loading class and replace text with the spinner element
     this.classList.add('loading');
     this.innerHTML = '<span class="spinner"></span>';
     
-    // TODO: Insert your custom Supabase query/logic here when ready
-
-    // Redirect after a short delay
     setTimeout(() => {
       window.location.href = this.href;
     }, 1500);
