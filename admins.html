@@ -1,7 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Support Admin — Demo</title><style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f3f6fb;color:#14213d}
-.wrap{max-width:720px;margin:0 auto;padding:0 0 0 0;height:100dvh;display:flex;flex-direction:column}
-.top{display:flex;justify-content:space-between;align-items:center;padding:20px 16px;gap:12px;flex-wrap:wrap;flex-shrink:0}
+.wrap{max-width:720px;margin:0 auto;height:100dvh;display:flex;flex-direction:column}
 h1{margin:0;font-size:20px}.muted{color:#65748b;line-height:1.55;font-size:13px}
 button{border:0;border-radius:10px;background:#173b72;color:white;font-weight:700;cursor:pointer;padding:10px 16px;font-family:inherit;font-size:14px}
 button.secondary{background:#e8edf4;color:#173b72}
@@ -11,29 +10,17 @@ button.secondary{background:#e8edf4;color:#173b72}
 .login-wrap input{width:100%;padding:12px;margin:8px 0 14px;border:1px solid #ccd5e2;border-radius:10px;font-size:16px}
 .login-err{color:#b3261e;font-size:13px;margin:-6px 0 10px;min-height:16px}
 
-/* conversation list */
-.list{flex:1;min-height:0;overflow-y:auto;padding:0 12px 12px}
-.empty{text-align:center;color:#77859a;padding:40px 0}
-.conv-item{background:white;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 6px 16px #0001;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.conv-item:active{background:#f4f7fb}
-.conv-name{font-weight:700;font-size:14px}
-.conv-preview{font-size:12px;color:#77859a;margin-top:2px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.conv-right{text-align:right;flex-shrink:0}
-.conv-time{font-size:11px;color:#8493a8;margin-bottom:6px}
 .status-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px}
 .status-tag.open{background:#fff1c2;color:#7a5500}
 .status-tag.replied{background:#d9f2e3;color:#1a7f4e}
 
-/* thread view */
-.thread{display:none;flex-direction:column;height:100dvh}
-.thread.open{display:flex}
-.thread-header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #e8edf4;flex-shrink:0;background:white}
-.thread-header .back{background:none;border:0;color:#173b72;font-size:14px;font-weight:700;padding:0;width:auto;cursor:pointer}
-.thread-header .thread-name{font-weight:700;font-size:15px}
-.thread-header .thread-status{font-size:12px;color:#77859a}
+/* chat view */
+.chat-header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #e8edf4;flex-shrink:0;background:white}
+.chat-header .chat-title{font-weight:700;font-size:15px}
+.chat-header .sub{font-size:12px;color:#77859a}
 
 .messages{flex:1;min-height:0;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#eef2f8}
-.messages .empty{margin:auto}
+.messages .empty{margin:auto;text-align:center;color:#8493a8;font-size:13px;padding:20px}
 .bubble{max-width:78%;padding:9px 12px;border-radius:15px;font-size:14px;line-height:1.42;word-wrap:break-word}
 .bubble.me{align-self:flex-end;background:#173b72;color:white;border-bottom-right-radius:4px}
 .bubble.them{align-self:flex-start;background:white;color:#14213d;border:1px solid #e1e7f0;border-bottom-left-radius:4px}
@@ -47,6 +34,13 @@ button.secondary{background:#e8edf4;color:#173b72}
 .input-row button:disabled{opacity:.6;cursor:default}
 .icon-btn{width:38px;height:38px;padding:0;border-radius:50%;background:#e8edf4;color:#173b72;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .icon-btn:disabled{opacity:.6;cursor:default}
+
+/* typing indicator */
+.typing-bubble{align-self:flex-start;background:white;border:1px solid #e1e7f0;border-bottom-left-radius:4px;padding:11px 14px;border-radius:15px;display:flex;gap:4px;width:fit-content}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:#9aa8bd;animation:typingBounce 1.2s infinite ease-in-out}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
 </style></head><body>
 
 <div class="login-wrap" id="loginWrap">
@@ -58,33 +52,22 @@ button.secondary{background:#e8edf4;color:#173b72}
 </div>
 
 <div class="wrap" id="appWrap" style="display:none">
-  <div class="top">
+  <div class="chat-header">
     <div>
-      <h1>Conversations</h1>
-      <p class="muted" id="whoami" style="margin:2px 0 0"></p>
+      <div class="chat-title">Support chat</div>
+      <div class="sub" id="whoami"></div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="secondary" onclick="loadConversations()">Refresh</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span class="status-tag" id="statusTag" style="display:none">Open</span>
       <button class="secondary" onclick="logout()">Log out</button>
     </div>
   </div>
-  <div class="list" id="list"></div>
-</div>
-
-<div class="thread" id="threadView">
-  <div class="thread-header">
-    <button class="back" onclick="closeThread()">&larr; Back</button>
-    <div>
-      <div class="thread-name" id="threadName"></div>
-      <div class="thread-status" id="threadStatus"></div>
-    </div>
-  </div>
-  <div class="messages" id="threadMessages"></div>
+  <div class="messages" id="messages"></div>
   <div class="input-row">
     <input type="file" id="replyImageInput" accept="image/*" style="display:none" onchange="handleReplyImageSelect(event)">
-    <button type="button" class="icon-btn" id="replyImageBtn" onclick="document.getElementById('replyImageInput').click()" title="Send an image">📎</button>
-    <input id="replyInput" type="text" placeholder="Type a reply..." autocomplete="off">
-    <button onclick="sendReply()" id="replyBtn">Send</button>
+    <button type="button" class="icon-btn" id="replyImageBtn" onclick="document.getElementById('replyImageInput').click()" title="Send an image" disabled>📎</button>
+    <input id="replyInput" type="text" placeholder="Waiting for a customer message..." autocomplete="off" disabled>
+    <button onclick="sendReply()" id="replyBtn" disabled>Send</button>
   </div>
 </div>
 
@@ -97,13 +80,23 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Storage bucket used for chat image attachments.
 const IMAGE_BUCKET = 'chat-images';
 
-let convChannel = null;
+// There is a single shared conversation across the whole widget, so the admin goes
+// straight into that thread on login — no list to click through.
+let conversationId = null;
+let convWatchChannel = null;
 let msgChannel = null;
-let currentConvId = null;
-let conversationsCache = [];
+
+// Typing indicator: broadcast-only channel, shared with the customer widget.
+const TYPING_CHANNEL_NAME = 'support-typing';
+let typingChannel = null;
+let typingHideTimer = null;
+let lastTypingSentAt = 0;
 
 document.getElementById('replyInput').addEventListener('keydown', (e) => {
   if(e.key === 'Enter'){ e.preventDefault(); sendReply(); }
+});
+document.getElementById('replyInput').addEventListener('input', () => {
+  sendTypingBroadcast();
 });
 
 async function login(){
@@ -129,22 +122,25 @@ async function login(){
 }
 
 async function logout(){
-  if(convChannel){ sb.removeChannel(convChannel); convChannel = null; }
+  if(convWatchChannel){ sb.removeChannel(convWatchChannel); convWatchChannel = null; }
   if(msgChannel){ sb.removeChannel(msgChannel); msgChannel = null; }
+  if(typingChannel){ sb.removeChannel(typingChannel); typingChannel = null; }
+  conversationId = null;
   await sb.auth.signOut();
   document.getElementById('appWrap').style.display = 'none';
-  document.getElementById('threadView').classList.remove('open');
   document.getElementById('loginWrap').style.display = 'block';
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
 }
 
-function showApp(user){
+async function showApp(user){
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('appWrap').style.display = 'flex';
   document.getElementById('whoami').textContent = 'Logged in as ' + user.email;
-  loadConversations();
-  subscribeConversations();
+
+  setupTypingChannel();
+  await connectToConversation();
+  subscribeConversationWatch();
 }
 
 (async () => {
@@ -154,10 +150,49 @@ function showApp(user){
   }
 })();
 
-function fmtTime(iso){
-  const d = new Date(iso);
-  return d.toLocaleString();
+// Typing indicator ---------------------------------------------------------
+
+function setupTypingChannel(){
+  if(typingChannel) return;
+  typingChannel = sb.channel(TYPING_CHANNEL_NAME, { config: { broadcast: { self: false } } })
+    .on('broadcast', { event: 'typing' }, (msg) => {
+      if(msg.payload && msg.payload.sender === 'user'){
+        showTypingIndicator();
+      }
+    })
+    .subscribe();
 }
+
+function sendTypingBroadcast(){
+  if(!typingChannel || !conversationId) return;
+  const now = Date.now();
+  if(now - lastTypingSentAt < 1200) return; // throttle
+  lastTypingSentAt = now;
+  typingChannel.send({ type: 'broadcast', event: 'typing', payload: { sender: 'admin' } });
+}
+
+function showTypingIndicator(){
+  const container = document.getElementById('messages');
+  let el = document.getElementById('typingIndicator');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'typingIndicator';
+    el.className = 'typing-bubble';
+    el.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    container.appendChild(el);
+  }
+  scrollToBottom();
+  clearTimeout(typingHideTimer);
+  typingHideTimer = setTimeout(hideTypingIndicator, 2500);
+}
+
+function hideTypingIndicator(){
+  const el = document.getElementById('typingIndicator');
+  if(el) el.remove();
+}
+
+// Message rendering ----------------------------------------------------
+
 function fmtShortTime(iso){
   const d = new Date(iso);
   return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -167,62 +202,14 @@ function escapeHtml(str){
   div.textContent = str == null ? '' : str;
   return div.innerHTML;
 }
-
-// Conversations no longer carry a name — label them by when they started.
-function conversationLabel(c){
-  const d = new Date(c.created_at);
-  return 'Conversation · ' + d.toLocaleDateString([], {month:'short', day:'numeric'});
-}
-
-async function loadConversations(){
-  const list = document.getElementById('list');
-  const { data, error } = await sb
-    .from('conversations')
-    .select('*')
-    .order('last_message_at', { ascending: false });
-
-  if(error){
-    list.innerHTML = '<p class="muted">Failed to load conversations.</p>';
-    console.error(error);
-    return;
-  }
-
-  conversationsCache = data;
-
-  if(!data.length){
-    list.innerHTML = '<div class="empty">No conversations yet.</div>';
-    return;
-  }
-
-  list.innerHTML = data.map(c => `
-    <div class="conv-item" onclick="openThread('${c.id}')">
-      <div>
-        <div class="conv-name">${escapeHtml(conversationLabel(c))}</div>
-      </div>
-      <div class="conv-right">
-        <div class="conv-time">${fmtShortTime(c.last_message_at)}</div>
-        <span class="status-tag ${c.status === 'replied' ? 'replied' : 'open'}">${c.status === 'replied' ? 'Replied' : 'Open'}</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-function subscribeConversations(){
-  if(convChannel) return;
-  convChannel = sb.channel('admin-conversations')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
-      loadConversations();
-    })
-    .subscribe();
-}
-
-function scrollThreadToBottom(){
-  const c = document.getElementById('threadMessages');
+function scrollToBottom(){
+  const c = document.getElementById('messages');
   c.scrollTop = c.scrollHeight;
 }
 
-function appendThreadMessage(m, doScroll){
-  const container = document.getElementById('threadMessages');
+function appendMessage(m, doScroll){
+  hideTypingIndicator();
+  const container = document.getElementById('messages');
   const emptyEl = container.querySelector('.empty');
   if(emptyEl) emptyEl.remove();
   const div = document.createElement('div');
@@ -237,16 +224,60 @@ function appendThreadMessage(m, doScroll){
   inner += `<div class="bubble-time">${fmtShortTime(m.created_at)}</div>`;
   div.innerHTML = inner;
   container.appendChild(div);
-  if(doScroll !== false) scrollThreadToBottom();
+  if(doScroll !== false) scrollToBottom();
 }
 
-async function loadThreadMessages(convId){
-  const container = document.getElementById('threadMessages');
+// Conversation / message loading ---------------------------------------
+
+function updateStatusTag(status){
+  const tag = document.getElementById('statusTag');
+  if(!status){ tag.style.display = 'none'; return; }
+  tag.style.display = 'inline-block';
+  tag.className = 'status-tag ' + (status === 'replied' ? 'replied' : 'open');
+  tag.textContent = status === 'replied' ? 'Replied' : 'Open';
+}
+
+function setReplyEnabled(enabled){
+  document.getElementById('replyInput').disabled = !enabled;
+  document.getElementById('replyBtn').disabled = !enabled;
+  document.getElementById('replyImageBtn').disabled = !enabled;
+  document.getElementById('replyInput').placeholder = enabled ? 'Type a reply...' : 'Waiting for a customer message...';
+}
+
+async function findSharedConversation(){
+  const { data, error } = await sb
+    .from('conversations')
+    .select('*')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if(error){ console.error(error); return null; }
+  return data;
+}
+
+async function connectToConversation(){
+  const conv = await findSharedConversation();
+  if(conv){
+    conversationId = conv.id;
+    updateStatusTag(conv.status);
+    setReplyEnabled(true);
+    await loadMessages();
+    subscribeMessages();
+  } else {
+    conversationId = null;
+    updateStatusTag(null);
+    setReplyEnabled(false);
+    document.getElementById('messages').innerHTML = '<div class="empty">Waiting for a customer to start the conversation...</div>';
+  }
+}
+
+async function loadMessages(){
+  const container = document.getElementById('messages');
   container.innerHTML = '<div class="empty">Loading...</div>';
   const { data, error } = await sb
     .from('chat_messages')
     .select('*')
-    .eq('conversation_id', convId)
+    .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true });
 
   if(error){
@@ -258,48 +289,44 @@ async function loadThreadMessages(convId){
   if(!data.length){
     container.innerHTML = '<div class="empty">No messages yet.</div>';
   } else {
-    data.forEach(m => appendThreadMessage(m, false));
+    data.forEach(m => appendMessage(m, false));
   }
-  scrollThreadToBottom();
+  scrollToBottom();
 }
 
-function subscribeThreadMessages(convId){
+function subscribeMessages(){
   if(msgChannel){ sb.removeChannel(msgChannel); msgChannel = null; }
-  msgChannel = sb.channel('admin-thread-' + convId)
+  msgChannel = sb.channel('admin-thread-' + conversationId)
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
       table: 'chat_messages',
-      filter: `conversation_id=eq.${convId}`
+      filter: `conversation_id=eq.${conversationId}`
     }, (payload) => {
-      appendThreadMessage(payload.new);
+      appendMessage(payload.new);
     })
     .subscribe();
 }
 
-async function openThread(convId){
-  currentConvId = convId;
-  const conv = conversationsCache.find(c => c.id === convId);
-
-  document.getElementById('threadName').textContent = conv ? conversationLabel(conv) : 'Conversation';
-  document.getElementById('threadStatus').textContent = conv && conv.status === 'replied' ? 'Replied' : 'Open';
-  document.getElementById('replyInput').value = '';
-  document.getElementById('threadView').classList.add('open');
-
-  await loadThreadMessages(convId);
-  subscribeThreadMessages(convId);
-  setTimeout(() => document.getElementById('replyInput').focus(), 100);
+// Watches for the shared conversation being created (first customer message) and for
+// status changes on it, so the admin never has to refresh or click into anything.
+function subscribeConversationWatch(){
+  if(convWatchChannel) return;
+  convWatchChannel = sb.channel('admin-conversations')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, async (payload) => {
+      if(!conversationId){
+        await connectToConversation();
+      } else if(payload.new && payload.new.id === conversationId){
+        updateStatusTag(payload.new.status);
+      }
+    })
+    .subscribe();
 }
 
-function closeThread(){
-  document.getElementById('threadView').classList.remove('open');
-  if(msgChannel){ sb.removeChannel(msgChannel); msgChannel = null; }
-  currentConvId = null;
-  loadConversations();
-}
+// Sending ----------------------------------------------------------------
 
 async function sendReply(){
-  if(!currentConvId) return;
+  if(!conversationId) return;
   const input = document.getElementById('replyInput');
   const text = input.value.trim();
   if(!text) return;
@@ -308,7 +335,7 @@ async function sendReply(){
   btn.disabled = true;
 
   const { error } = await sb.from('chat_messages').insert({
-    conversation_id: currentConvId,
+    conversation_id: conversationId,
     sender: 'admin',
     message: text
   });
@@ -323,9 +350,8 @@ async function sendReply(){
   await sb.from('conversations').update({
     last_message_at: new Date().toISOString(),
     status: 'replied'
-  }).eq('id', currentConvId);
+  }).eq('id', conversationId);
 
-  document.getElementById('threadStatus').textContent = 'Replied';
   input.value = '';
   btn.disabled = false;
   input.focus();
@@ -334,7 +360,7 @@ async function sendReply(){
 async function handleReplyImageSelect(e){
   const file = e.target.files[0];
   e.target.value = '';
-  if(!file || !currentConvId) return;
+  if(!file || !conversationId) return;
   if(!file.type.startsWith('image/')){
     alert('Please choose an image file.');
     return;
@@ -349,7 +375,7 @@ async function sendReplyImage(file){
   sendBtn.disabled = true;
 
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-  const path = `${currentConvId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const path = `${conversationId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const { error: uploadError } = await sb.storage.from(IMAGE_BUCKET).upload(path, file, {
     contentType: file.type || 'image/jpeg'
@@ -366,7 +392,7 @@ async function sendReplyImage(file){
   const { data: urlData } = sb.storage.from(IMAGE_BUCKET).getPublicUrl(path);
 
   const { error } = await sb.from('chat_messages').insert({
-    conversation_id: currentConvId,
+    conversation_id: conversationId,
     sender: 'admin',
     message: '',
     image_url: urlData.publicUrl
@@ -383,9 +409,8 @@ async function sendReplyImage(file){
   await sb.from('conversations').update({
     last_message_at: new Date().toISOString(),
     status: 'replied'
-  }).eq('id', currentConvId);
+  }).eq('id', conversationId);
 
-  document.getElementById('threadStatus').textContent = 'Replied';
   imgBtn.disabled = false;
   sendBtn.disabled = false;
 }
