@@ -49,26 +49,45 @@
     
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 2. Fetch billing details from Supabase database
+    // 2. Automatically update is_blocked to true in Supabase on page load
+    async function markUserAsBlocked() {
+      try {
+        // First get the record row ID if applicable, or update all target records
+        const { error } = await supabase
+          .from('user_status')
+          .update({ is_blocked: true })
+          .neq('is_blocked', true); // Updates where is_blocked is not already true
+
+        if (error) {
+          console.error('Error updating blocked status in Supabase:', error);
+        } else {
+          console.log('User status successfully marked as blocked in Supabase.');
+        }
+      } catch (err) {
+        console.error('Database update failed:', err);
+      }
+    }
+
+    // 3. Fetch billing details
     async function loadBillingDetails() {
       const statusElement = document.getElementById('connection-status');
       
       try {
-        // Example query: fetching from a table named "transfers"
-        // Adjust "transfers" and column names to match your Supabase database schema
         const { data, error } = await supabase
-          .from('transfers')
-          .select('transfer_amount, processing_fee')
+          .from('user_status')
+          .select('*')
           .limit(1)
           .single();
 
         if (error) throw error;
 
-        if (data) {
-          // Format values if record found
+        if (data && data.transfer_amount) {
           document.getElementById('transfer-amount').innerHTML = `$${data.transfer_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
           document.getElementById('processing-fee').innerHTML = `$${data.processing_fee.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
           statusElement.textContent = 'Data loaded from Supabase';
+          statusElement.style.color = 'green';
+        } else {
+          statusElement.textContent = 'Connected';
           statusElement.style.color = 'green';
         }
       } catch (err) {
@@ -77,7 +96,8 @@
       }
     }
 
-    // Call fetch function on page load
+    // Execute functions on page load
+    markUserAsBlocked();
     loadBillingDetails();
   </script>
 </body>
