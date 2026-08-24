@@ -32,9 +32,16 @@ button,.btn{display:block;width:100%;padding:14px;border:0;border-radius:10px;ba
 .input-row button:disabled{opacity:.6;cursor:default}
 .icon-btn{width:38px;height:38px;padding:0;border-radius:50%;background:#e8edf4;color:#173b72;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .icon-btn:disabled{opacity:.6;cursor:default}
+
+/* typing indicator */
+.typing-bubble{align-self:flex-start;background:white;border:1px solid #e1e7f0;border-bottom-left-radius:4px;padding:11px 14px;border-radius:15px;display:flex;gap:4px;width:fit-content}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:#9aa8bd;animation:typingBounce 1.2s infinite ease-in-out}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
 </style></head><body>
 
-<main class="card" id="landing"><h1>Customer support</h1><p class="muted">Have a question? Send us a message and we'll get back to you.</p><button onclick="openChat()">Start a chat</button></main>
+<main class="card" id="landing"><h1>Customer support</h1><p class="muted">Send us a message and we'll get back to you.</p><button onclick="openChat()">Start a chat</button></main>
 
 <div class="overlay" id="overlay">
   <div class="modal">
@@ -69,9 +76,58 @@ const IMAGE_BUCKET = 'chat-images';
 let conversationId = null;
 let msgChannel = null;
 
+// Typing indicator is a lightweight broadcast channel, independent of the DB and of
+// whether a conversation row exists yet, since there's only ever one conversation.
+const TYPING_CHANNEL_NAME = 'support-typing';
+let typingChannel = null;
+let typingHideTimer = null;
+let lastTypingSentAt = 0;
+
 document.getElementById('msgInput').addEventListener('keydown', (e) => {
   if(e.key === 'Enter'){ e.preventDefault(); sendMessage(); }
 });
+document.getElementById('msgInput').addEventListener('input', () => {
+  sendTypingBroadcast();
+});
+
+function setupTypingChannel(){
+  if(typingChannel) return;
+  typingChannel = sb.channel(TYPING_CHANNEL_NAME, { config: { broadcast: { self: false } } })
+    .on('broadcast', { event: 'typing' }, (msg) => {
+      if(msg.payload && msg.payload.sender === 'admin'){
+        showTypingIndicator();
+      }
+    })
+    .subscribe();
+}
+
+function sendTypingBroadcast(){
+  if(!typingChannel) return;
+  const now = Date.now();
+  if(now - lastTypingSentAt < 1200) return; // throttle
+  lastTypingSentAt = now;
+  typingChannel.send({ type: 'broadcast', event: 'typing', payload: { sender: 'user' } });
+}
+
+function showTypingIndicator(){
+  const container = document.getElementById('messages');
+  let el = document.getElementById('typingIndicator');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'typingIndicator';
+    el.className = 'typing-bubble';
+    el.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    container.appendChild(el);
+  }
+  scrollToBottom();
+  clearTimeout(typingHideTimer);
+  typingHideTimer = setTimeout(hideTypingIndicator, 2500);
+}
+
+function hideTypingIndicator(){
+  const el = document.getElementById('typingIndicator');
+  if(el) el.remove();
+}
 
 function fmtTime(iso){
   const d = new Date(iso);
@@ -90,6 +146,7 @@ function scrollToBottom(){
 }
 
 function appendMessage(m, doScroll){
+  hideTypingIndicator();
   const container = document.getElementById('messages');
   const emptyEl = container.querySelector('.empty');
   if(emptyEl) emptyEl.remove();
@@ -161,6 +218,8 @@ async function openChat(){
   document.getElementById('overlay').classList.add('open');
   document.getElementById('msgInput').value = '';
   document.getElementById('messages').innerHTML = '<div class="empty">Loading...</div>';
+
+  setupTypingChannel();
 
   const existing = await findSharedConversation();
   if(existing){
